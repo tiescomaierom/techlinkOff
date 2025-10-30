@@ -1,13 +1,11 @@
-// ...existing code...
 import React, { useContext, useState } from 'react';
 import { CartContext } from '../contexts/CartContext';
 import AddProductPanel from './AddProductPanel';
 import { useProducts } from '../contexts/ProductsContext';
-// ...existing code...
 
 function CartPage() {
-  const { cart, removeFromCart, clearCart, addToCart } = useContext(CartContext);
-  const { products } = useProducts(); // pega a lista global
+  const { cart = [], removeFromCart, clearCart, addToCart } = useContext(CartContext) || {};
+  const { products = [] } = useProducts() || {}; // garante array por padrão
   const categories = ['all', 'placa mae', 'memoria RAM', 'placa de vídeo', 'processador'];
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showManager, setShowManager] = useState(false);
@@ -21,22 +19,20 @@ function CartPage() {
     }
   }
 
-  const filtered = selectedCategory === 'all' ? products : products.filter(p => p.category === selectedCategory);
-
+  const filtered = selectedCategory === 'all'
+    ? products
+    : products.filter(p => String(p.category || '').toLowerCase() === String(selectedCategory).toLowerCase());
 
   return (
     <div style={{ padding: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <h2>Produtos e Carrinho</h2>
-        <div>
-          <button onClick={() => setShowManager(true)} style={{ marginRight: 8 }}>Abrir Gerenciador de Produtos</button>
-        </div>
       </div>
 
       {/* Painel separado para adicionar produtos */}
       {showManager && (
         <AddProductPanel
-          categories={categories}
+          addOptions={categories} // passa as categorias como opções ao painel
           onClose={() => setShowManager(false)}
         />
       )}
@@ -69,7 +65,7 @@ function CartPage() {
           {filtered.map(prod => (
             <li key={prod.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
               <img
-                src={prod.imageUrl || 'https://via.placeholder.com/80'}
+                src={prod.imageUrl || prod.image || 'https://via.placeholder.com/80'}
                 alt={prod.name}
                 style={{ width: 80, height: 80, objectFit: 'cover', marginRight: 12, borderRadius: 6 }}
               />
@@ -87,25 +83,25 @@ function CartPage() {
 
       <div>
         <h2>Seu Carrinho</h2>
-        {cart.length === 0 ? (
+        {(!cart || cart.length) === 0 ? (
           <p>O carrinho está vazio.</p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0 }}>
             {cart.map(item => (
               <li key={item.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
                 <img
-                  src={item.imageUrl || 'https://via.placeholder.com/80'}
+                  src={item.imageUrl || item.image || 'https://via.placeholder.com/80'}
                   alt={item.name}
                   style={{ width: '80px', height: '80px', objectFit: 'cover', marginRight: '16px', borderRadius: '8px' }}
                 />
                 <span style={{ flex: 1 }}>{item.name}</span>
-                <button onClick={() => removeFromCart(item.id)}>Remover</button>
+                <button onClick={() => typeof removeFromCart === 'function' ? removeFromCart(item.id) : alert('removeFromCart não implementado')}>Remover</button>
               </li>
             ))}
           </ul>
         )}
-        {cart.length > 0 && (
-          <button onClick={clearCart}>Limpar Carrinho</button>
+        {cart && cart.length > 0 && (
+          <button onClick={() => typeof clearCart === 'function' ? clearCart() : alert('clearCart não implementado')}>Limpar Carrinho</button>
         )}
       </div>
     </div>
@@ -113,4 +109,3 @@ function CartPage() {
 }
 
 export default CartPage;
-// ...existing code...

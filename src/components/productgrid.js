@@ -101,13 +101,7 @@ export default function ProductGrid(props) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button
-            onClick={() => navigate('/cart')}
-            title="Ver carrinho"
-            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-          >
-            🛒 Carrinho ({cartItems.length})
-          </button>
+
 
           {/* Abre diretamente o pop-up; as opções estão dentro do AddProductPanel */}
           <button
