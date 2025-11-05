@@ -1,5 +1,5 @@
 // ...existing code...
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useProducts } from '../contexts/ProductsContext';
 
 export default function AddProductPanel({ onClose, defaultCategory = null, addOptions = [] }) {
@@ -8,8 +8,17 @@ export default function AddProductPanel({ onClose, defaultCategory = null, addOp
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState(defaultCategory || '');
   const [imageUrl, setImageUrl] = useState('');
+  const [description, setDescription] = useState('');
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   const validateImageUrl = (url) => {
     if (!url) return true;
@@ -31,22 +40,34 @@ export default function AddProductPanel({ onClose, defaultCategory = null, addOp
       return;
     }
 
+    // validação de preço mais restritiva
+    const parsedPrice = price === '' ? 0 : parseFloat(String(price).replace(',', '.'));
+    if (isNaN(parsedPrice) || parsedPrice < 0) {
+      setError('Preço inválido. Informe um número maior ou igual a 0.');
+      return;
+    }
+
     if (imageUrl && !validateImageUrl(imageUrl)) {
       setImageError('URL de imagem inválida.');
       return;
     }
 
+    const descTrim = description.trim();
     const product = {
       id: Date.now().toString(),
       name: name.trim(),
-      price: parseFloat(price) || 0,
+      price: parsedPrice,
       category: category || null,
-      // grava a URL em várias chaves comuns para compatibilidade com ProductCard/Context
       image: imageUrl || null,
       imageUrl: imageUrl || null,
       img: imageUrl || null,
       imagem: imageUrl || null,
-      foto: imageUrl || null
+      foto: imageUrl || null,
+      description: descTrim || null,
+      descricao: descTrim || null,
+      desc: descTrim || null,
+      detalhe: descTrim || null,
+      detalhes: descTrim || null
     };
 
     if (typeof addProduct === 'function') {
@@ -57,40 +78,66 @@ export default function AddProductPanel({ onClose, defaultCategory = null, addOp
     onClose?.();
   };
 
+  // adicione esta linha para construir as opções de categoria (mantendo addOptions e incluindo as novas)
+  const categoryOptions = Array.from(new Set([...(addOptions || []), 'Placa mãe', 'Memória RAM']));
+
   return (
-    <div style={{
-      position: 'fixed',
-      left: 0, top: 0, right: 0, bottom: 0,
-      background: 'rgba(0,0,0,0.4)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 200
-    }}>
-      <div style={{ width: 520, background: '#fff', padding: 16, borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.2)' }}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+      style={{ position: 'fixed', left: 0, top: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}
+    >
+      <div
+        ref={contentRef}
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: 520, background: '#fff', padding: 16, borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.2)' }}
+      >
         <h3>Adicionar Produto</h3>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 8 }}>
-            <label>Nome</label><br />
-            <input value={name} onChange={e => setName(e.target.value)} style={{ width: '100%' }} />
+            <label htmlFor="name-input">Nome</label><br />
+            <input id="name-input" value={name} onChange={e => setName(e.target.value)} style={{ width: '100%' }} />
           </div>
 
           <div style={{ marginBottom: 8 }}>
-            <label>Preço</label><br />
-            <input value={price} onChange={e => setPrice(e.target.value)} style={{ width: '100%' }} />
+            <label htmlFor="price-input">Preço</label><br />
+            <input id="price-input" type="number" step="0.01" min="0" value={price} onChange={e => setPrice(e.target.value)} style={{ width: '100%' }} />
           </div>
 
           <div style={{ marginBottom: 8 }}>
-            <label>URL da imagem</label><br />
+            <label htmlFor="description-input">Descrição</label><br />
+            <textarea
+              id="description-input"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Descrição do produto (opcional)"
+              rows={4}
+              style={{ width: '100%', resize: 'vertical' }}
+            />
+          </div>
+
+          <div style={{ marginBottom: 8 }}>
+            <label htmlFor="image-input">URL da imagem</label><br />
             <input
+              id="image-input"
               value={imageUrl}
-              onChange={e => { setImageUrl(e.target.value); setImageError(null); }}
+              onChange={e => { setImageUrl(e.target.value); setImageError(null); setImageLoaded(false); }}
               placeholder="https://exemplo.com/imagem.jpg"
               style={{ width: '100%' }}
             />
             {imageError && <div style={{ color: 'red', marginTop: 6 }}>{imageError}</div>}
-            {imageUrl && validateImageUrl(imageUrl) && (
+            {imageUrl && validateImageUrl(imageUrl) && !imageError && (
               <div style={{ marginTop: 8 }}>
                 <div style={{ fontSize: 12, color: '#444', marginBottom: 6 }}>Preview:</div>
-                <img src={imageUrl} alt="preview" style={{ maxWidth: '100%', maxHeight: 180, borderRadius: 6, border: '1px solid #eee' }} onError={() => setImageError('Não foi possível carregar a imagem.')} />
+                <img
+                  src={imageUrl}
+                  alt="preview"
+                  style={{ maxWidth: '100%', maxHeight: 180, borderRadius: 6, border: '1px solid #eee', display: imageLoaded ? 'block' : 'none' }}
+                  onError={() => { setImageError('Não foi possível carregar a imagem.'); setImageLoaded(false); }}
+                  onLoad={() => { setImageError(null); setImageLoaded(true); }}
+                />
+                {!imageLoaded && !imageError && <div style={{ fontSize: 12, color: '#666' }}>Carregando...</div>}
               </div>
             )}
           </div>
@@ -98,7 +145,7 @@ export default function AddProductPanel({ onClose, defaultCategory = null, addOp
           <div style={{ marginBottom: 8 }}>
             <label>Categoria</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
-              {addOptions.map(opt => (
+              {categoryOptions.map(opt => (
                 <label key={opt} style={{ cursor: 'pointer' }}>
                   <input
                     type="radio"
