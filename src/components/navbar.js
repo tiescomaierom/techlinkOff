@@ -1,5 +1,5 @@
-import React, { useContext, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useContext, useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './../styles/Navbar.css';
 import { CartContext } from '../contexts/CartContext';
 import AddProductPanel from './AddProductPanel';
@@ -9,6 +9,29 @@ function Navbar(props) {
   const count = cart.length || 0;
   const [showAddProduct, setShowAddProduct] = useState(false);
 
+  const [search, setSearch] = useState('');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const doSearch = (q) => {
+    const trimmed = (q || '').trim();
+    if (!trimmed) {
+      // remove query se estiver vazia — volta para a home
+      navigate('/', { replace: false });
+      return;
+    }
+    // navega para a página de produtos com q no querystring
+    navigate(`/product?q=${encodeURIComponent(trimmed)}`, { replace: false });
+  };
+
+  // sincroniza o input com a query atual (útil quando já está em /product?q=...)
+  useEffect(() => {
+    try {
+      const q = new URLSearchParams(location.search).get('q') || '';
+      setSearch(q);
+    } catch (e) { /* ignore */ }
+  }, [location.search]);
+
   return (
     <nav className="navbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12 }}>
       <div className="navbar-brand">
@@ -16,9 +39,19 @@ function Navbar(props) {
           <h1 style={{ margin: 0 }}>TECHLINK</h1>
         </Link>
       </div>
-      <div className="navbar-search">
-        <input type="text" placeholder="Encontre aparelhos e periféricos usados..." />
-        <button type="submit">🔍</button>
+      <div className="navbar-search" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input
+          type="text"
+          placeholder="Encontre aparelhos e periféricos usados..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); doSearch(search); } }}
+          aria-label="Pesquisar produtos"
+          style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #ccc', minWidth: 240 }}
+        />
+        <button type="button" onClick={() => doSearch(search)} aria-label="Pesquisar" style={{ padding: '6px 10px', cursor: 'pointer' }}>
+          🔍
+        </button>
       </div>
       <div className="navbar-actions" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <button
