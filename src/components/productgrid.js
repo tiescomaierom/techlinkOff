@@ -104,13 +104,7 @@ export default function ProductGrid(props) {
 
 
           {/* Abre diretamente o pop-up; as opções estão dentro do AddProductPanel */}
-          <button
-            onClick={() => handleOpenAddPopup(null)}
-            title="Adicionar produto"
-            style={{ background: '#1976d2', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 4 }}
-          >
-            + Adicionar Produto
-          </button>
+
         </div>
       </div>
 

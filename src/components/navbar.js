@@ -1,14 +1,16 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './../styles/Navbar.css';
 import { CartContext } from '../contexts/CartContext';
+import AddProductPanel from './AddProductPanel';
 
-function Navbar() {
+function Navbar(props) {
   const { cart = [] } = useContext(CartContext) || {};
   const count = cart.length || 0;
+  const [showAddProduct, setShowAddProduct] = useState(false);
 
   return (
-    <nav className="navbar">
+    <nav className="navbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12 }}>
       <div className="navbar-brand">
         <Link to="/" style={{ textDecoration: 'none', color: 'inherit', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }} aria-label="Ir para a página inicial">
           <h1 style={{ margin: 0 }}>TECHLINK</h1>
@@ -18,8 +20,14 @@ function Navbar() {
         <input type="text" placeholder="Encontre aparelhos e periféricos usados..." />
         <button type="submit">🔍</button>
       </div>
-      <div className="navbar-actions">
-        <button className="sell-device-button">Venda seu aparelho</button>
+      <div className="navbar-actions" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <button
+          type="button"
+          onClick={() => setShowAddProduct(true)}
+          style={{ padding: '8px 12px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}
+        >
+          Adicionar produtos
+        </button>
 
         <Link
           to="/cart"
@@ -50,9 +58,16 @@ function Navbar() {
             </span>
           )}
         </Link>
-
-        <Link to="/login" className="login-button" style={{ textDecoration: 'none' }} aria-label="Entrar">Entrar</Link>
       </div>
+
+      {/* modal do formulário */}
+      {showAddProduct && (
+        <AddProductPanel
+          onClose={() => setShowAddProduct(false)}
+          defaultCategory={props.defaultCategory}
+          addOptions={props.addOptions}
+        />
+      )}
     </nav>
   );
 }

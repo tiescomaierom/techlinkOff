@@ -79,7 +79,15 @@ export default function AddProductPanel({ onClose, defaultCategory = null, addOp
   };
 
   // adicione esta linha para construir as opções de categoria (mantendo addOptions e incluindo as novas)
-  const categoryOptions = Array.from(new Set([...(addOptions || []), 'Placa mãe', 'Memória RAM']));
+  const categoryOptions = Array.from(new Set([
+    ...(addOptions || []),
+    'Placa Mãe',
+    'Memória RAM',
+    'Placa de Vídeo',
+    'Processador',
+    'Fonte',
+    'Gabinete'
+  ]));
 
   return (
     <div
